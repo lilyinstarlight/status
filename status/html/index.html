@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+
+		<title>Status</title>
+
+		<style>
+			table {{
+				border-collapse: collapse;
+			}}
+
+			table th, table td {{
+				border: solid 1px;
+				padding: 1em;
+			}}
+		</style>
+	</head>
+	<body>
+		<header>
+			<h1>Status</h1>
+			<p>Last Updated: <time datetime="{nowtime}">{now}</time></p>
+		</header>
+		<main>
+			<h2>Services</h2>
+			<table>
+{services}
+			</table>
+
+			<h2>Incidents</h2>
+{incidents}
+		</main>
+	</body>
+</html>
