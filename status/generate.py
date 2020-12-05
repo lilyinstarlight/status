@@ -81,9 +81,13 @@ def generate_html(now, services, statuses, incidents, *, template_directory=None
 
 
 def generate_json(now, services, statuses, incidents):
+    services_json = services.copy()
     incidents_json = incidents[:]
+
+    for info in services_json.values():
+        del info['id']
 
     for incident in incidents_json:
         incident['date'] = incident['date'].isoformat(timespec='milliseconds')
 
-    return json.dumps({'last_updated': now.isoformat(timespec='milliseconds'), 'services': {service: {**info, 'status': statuses[service]} for service, info in services.items()}, 'incidents': incidents_json}, indent=2)
+    return json.dumps({'last_updated': now.isoformat(timespec='milliseconds'), 'services': {service: {**info, 'status': statuses[service]} for service, info in services_json.items()}, 'incidents': incidents_json}, indent=2) + '\n'
