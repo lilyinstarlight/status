@@ -21,14 +21,14 @@ __all__ = ['main']
 def main():
     argparser = argparse.ArgumentParser(description='another static status page generator')
 
-    argparser.add_argument('-c', '--config', dest='config', required=True, metavar='CONFIG.cfg', help='configuration file describing grafana connection and services')
-    argparser.add_argument('-d', '--directory', dest='directory', required=True, help='directory containing incident info')
+    argparser.add_argument('-d', '--directory', dest='directory', default='.', help='directory containing incident info')
     argparser.add_argument('-z', '--timezone', dest='timezone', help='alternative timezone for output')
 
     commands = argparser.add_subparsers(dest='command')
 
     command_run = commands.add_parser('run', help='generate status page')
-    command_run.add_argument('-o', '--output', dest='output', help='output directory (generates index.html, status.json, and feed.xml)')
+    command_run.add_argument('-c', '--config', dest='config', required=True, metavar='CONFIG.cfg', help='configuration file describing grafana connection and services')
+    command_run.add_argument('-o', '--output', dest='output', default='.', help='output directory (generates index.html, status.json, and feed.xml)')
     command_run.add_argument('-t', '--template', dest='template', help='input template directory')
     command_run.add_argument('-i', '--incident-days', dest='days', type=int, default=7, help='number of days of resolved incidents to show')
 
@@ -51,14 +51,14 @@ def main():
         argparser.print_usage()
         sys.exit()
 
-    config = configparser.ConfigParser()
-    config.read(args.config)
-
-    services = {section: config[section] for section in config.sections() if section != 'api'}
-
     os.makedirs(args.directory, exist_ok=True)
 
     if args.command == 'run':
+        config = configparser.ConfigParser()
+        config.read(args.config)
+
+        services = {section: config[section] for section in config.sections() if section != 'api'}
+
         statuses = status.grafana.check(config['api']['base'], config['api']['key'], services)
         incidents = status.incident.get_all(args.directory, args.timezone)
 
@@ -71,13 +71,12 @@ def main():
             if incident['status'] == 'up':
                 incidents.remove(incident)
 
-        output = args.output or os.getcwd()
-        os.makedirs(output, exist_ok=True)
+        os.makedirs(args.output, exist_ok=True)
 
-        with open(os.path.join(output, 'index.html'), 'w') as output_html:
+        with open(os.path.join(args.output, 'index.html'), 'w') as output_html:
             output_html.write(status.generate.generate_html(now, services, statuses, incidents, template_directory=args.template))
 
-        with open(os.path.join(output, 'status.json'), 'w') as output_json:
+        with open(os.path.join(args.output, 'status.json'), 'w') as output_json:
             output_json.write(status.generate.generate_json(now, services, statuses, incidents))
     elif args.command == 'new-incident':
         info = {}
