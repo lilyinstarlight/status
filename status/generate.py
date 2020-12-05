@@ -12,7 +12,7 @@ __all__ = ['generate_html', 'generate_json']
 pretty_statuses = {
     'up': 'Operational',
     'down': 'Unavailable',
-    'maintenance': 'Planned Maintenance',
+    'maintenance': 'Maintenance',
     'unknown': 'Unknown',
 }
 
