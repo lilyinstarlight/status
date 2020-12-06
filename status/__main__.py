@@ -27,13 +27,14 @@ def main():
     commands = argparser.add_subparsers(dest='command')
 
     command_run = commands.add_parser('run', help='generate status page')
-    command_run.add_argument('-c', '--config', dest='config', required=True, metavar='CONFIG.cfg', help='configuration file describing grafana connection and services')
+    command_run.add_argument('-c', '--config', dest='config', required=True, metavar='CONFIG.cfg', help='generation configuration file describing metadata, grafana connection, services')
     command_run.add_argument('-o', '--output', dest='output', default='.', help='output directory (generates index.html, status.json, and feed.xml)')
     command_run.add_argument('-t', '--template', dest='template', help='input template directory')
     command_run.add_argument('-i', '--incident-days', dest='days', type=int, default=7, help='number of days of resolved incidents to show')
 
     command_new_incident = commands.add_parser('new-incident', help='create new incident from arguments (markdown content can be piped to stdin)')
     command_new_incident.add_argument('--date', dest='date', help='date of incident')
+    command_new_incident.add_argument('--updated', dest='updated', help='last updated date of incident')
     command_new_incident.add_argument('--title', dest='title', help='title of incident')
     command_new_incident.add_argument('--status', dest='status', choices=['up', 'down', 'maintenance', 'unknown'], help='incident status')
     command_new_incident.add_argument('--affected', dest='affected', nargs='*', help='services affected (specify multiple times per service)')
@@ -41,6 +42,7 @@ def main():
 
     command_edit_incident = commands.add_parser('edit-incident', help='modify existing incident from arguments (markdown content can be piped to stdin)')
     command_edit_incident.add_argument('--date', dest='date', help='date of incident')
+    command_edit_incident.add_argument('--updated', dest='updated', help='last updated date of incident')
     command_edit_incident.add_argument('--title', dest='title', help='title of incident')
     command_edit_incident.add_argument('--status', dest='status', choices=['up', 'down', 'maintenance', 'unknown'], help='incident status')
     command_edit_incident.add_argument('--affected', dest='affected', nargs='*', help='services affected (specify multiple times per service)')
@@ -57,9 +59,11 @@ def main():
         config = configparser.ConfigParser()
         config.read(args.config)
 
-        services = {section: config[section] for section in config.sections() if section != 'api'}
+        services = {section: config[section] for section in config.sections() if section != 'GLOBAL'}
 
-        statuses = status.grafana.check(config['api']['base'], config['api']['key'], services)
+        gconfig = config['GLOBAL']
+
+        statuses = status.grafana.check(gconfig['api_base'], gconfig['api_key'], services)
         incidents = status.incident.get_all(args.directory, args.timezone)
 
         now = datetime.datetime.now().astimezone(dateutil.tz.gettz(args.timezone))
@@ -74,14 +78,22 @@ def main():
         os.makedirs(args.output, exist_ok=True)
 
         with open(os.path.join(args.output, 'index.html'), 'w') as output_html:
-            output_html.write(status.generate.generate_html(now, services, statuses, incidents, template_directory=args.template))
+            output_html.write(status.generate.generate_html(gconfig, now, services, statuses, incidents, template_directory=args.template))
 
         with open(os.path.join(args.output, 'status.json'), 'w') as output_json:
-            output_json.write(status.generate.generate_json(now, services, statuses, incidents))
+            output_json.write(status.generate.generate_json(gconfig, now, services, statuses, incidents))
+
+        with open(os.path.join(args.output, 'atom.xml'), 'wb') as output_atom:
+            output_atom.write(status.generate.generate_atom(gconfig, now, incidents))
+
+        with open(os.path.join(args.output, 'rss.xml'), 'wb') as output_rss:
+            output_rss.write(status.generate.generate_rss(gconfig, now, incidents))
     elif args.command == 'new-incident':
         info = {}
         if args.date:
             info['date'] = dateutil.parser.isoparse(args.date).astimezone(dateutil.tz.gettz(args.timezone))
+        if args.updated:
+            info['updated'] = dateutil.parser.isoparse(args.updated).astimezone(dateutil.tz.gettz(args.timezone))
         if args.title:
             info['title'] = args.title
         if args.status:
@@ -101,6 +113,8 @@ def main():
         info = {}
         if args.date:
             info['date'] = dateutil.parser.isoparse(args.date).astimezone(dateutil.tz.gettz(args.timezone))
+        if args.updated:
+            info['updated'] = dateutil.parser.isoparse(args.updated).astimezone(dateutil.tz.gettz(args.timezone))
         if args.title:
             info['title'] = args.title
         if args.status:

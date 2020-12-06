@@ -5,8 +5,10 @@ import os.path
 
 import markdown
 
+import feedgen.feed
 
-__all__ = ['generate_html', 'generate_json']
+
+__all__ = ['generate_html', 'generate_json', 'generate_atom', 'generate_rss']
 
 
 pretty_statuses = {
@@ -30,7 +32,7 @@ def render_title(title):
     return rendered
 
 
-def generate_html(now, services, statuses, incidents, *, template_directory=None):
+def generate_html(config, now, services, statuses, incidents, *, template_directory=None):
     if not template_directory:
         template_directory = os.path.join(os.path.dirname(__file__), 'html')
 
@@ -72,15 +74,15 @@ def generate_html(now, services, statuses, incidents, *, template_directory=None
         else:
             affected_html = ''
 
-        incidents_html.append(incident_template.format(name=html.escape(incident['name']), title=render_title(incident['title']), datetime=incident['date'].isoformat(timespec='milliseconds'), date=html.escape(incident['date'].strftime('%Y-%m-%d %H:%M %Z')), status=html.escape(incident['status'] if incident['status'] in pretty_statuses else ''), pretty=html.escape(pretty_statuses.get(incident['status'], incident['status'])), content=render(incident['content']), affected=affected_html))
+        incidents_html.append(incident_template.format(name=html.escape(incident['name']), title=render_title(incident['title']), datetime=incident['date'].isoformat(timespec='milliseconds'), date=html.escape(incident['date'].strftime('%Y-%m-%d %H:%M %Z')), updatedtime=incident['updated'].isoformat(timespec='milliseconds'), updated=html.escape(incident['updated'].strftime('%Y-%m-%d %H:%M %Z')), status=html.escape(incident['status'] if incident['status'] in pretty_statuses else ''), pretty=html.escape(pretty_statuses.get(incident['status'], incident['status'])), content=render(incident['content']), affected=affected_html))
 
     if not incidents_html:
         incidents_html.append('<p>None</p>')
 
-    return status_template.format(nowtime=now.isoformat(timespec='milliseconds'), now=html.escape(now.strftime('%Y-%m-%d %H:%M %Z')), services='\n'.join(services_html), incidents='\n'.join(incidents_html))
+    return status_template.format(title=config['title'], nowtime=now.isoformat(timespec='milliseconds'), now=html.escape(now.strftime('%Y-%m-%d %H:%M %Z')), services='\n'.join(services_html), incidents='\n'.join(incidents_html))
 
 
-def generate_json(now, services, statuses, incidents):
+def generate_json(config, now, services, statuses, incidents):
     services_json = services.copy()
     incidents_json = incidents[:]
 
@@ -89,5 +91,48 @@ def generate_json(now, services, statuses, incidents):
 
     for incident in incidents_json:
         incident['date'] = incident['date'].isoformat(timespec='milliseconds')
+        incident['updated'] = incident['updated'].isoformat(timespec='milliseconds')
 
     return json.dumps({'last_updated': now.isoformat(timespec='milliseconds'), 'services': {service: {**info, 'status': statuses[service]} for service, info in services_json.items()}, 'incidents': incidents_json}, indent=2) + '\n'
+
+
+def create_feed(config, now, incidents):
+    fg = feedgen.feed.FeedGenerator()
+
+    fg.id('incidents')
+    fg.title(config['title'])
+    fg.subtitle(config['title'] + ' - Incidents')
+    fg.link(href='/')
+
+    if 'link' in config:
+        fg.link(config['link'])
+
+    if 'logo' in config:
+        fg.logo(config['logo'])
+
+    updated = None
+
+    for incident in incidents[::-1]:
+        fe = fg.add_entry()
+
+        fe.title(incident['title'])
+        fe.published(incident['date'])
+        fe.updated(incident['updated'])
+        fe.content('Status: {status}\n{affected}\n{content}'.format(status=incident['status'], affected=('\nAffected:\n' + ''.join(f'* {service}\n' for service in incident['affected']) if incident['affected'] else ''), content=incident['content']))
+
+        fe.id(incident['name'])
+
+        if not updated or incident['updated'] > updated:
+            updated = incident['updated']
+
+    fg.updated(updated)
+
+    return fg
+
+
+def generate_atom(config, now, incidents):
+    return create_feed(config, now, incidents).atom_str(pretty=True)
+
+
+def generate_rss(config, now, incidents):
+    return create_feed(config, now, incidents).rss_str(pretty=True)

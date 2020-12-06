@@ -1,9 +1,12 @@
 <!DOCTYPE html>
 <html>
 	<head>
+		<title>{title}</title>
+
 		<meta charset="UTF-8">
 
-		<title>Status</title>
+		<link rel="alternate" type="application/atom+xml" href="atom.xml"/>
+		<link rel="alternate" type="application/rss+xml" href="rss.xml"/>
 
 		<style>
 			table {{
@@ -18,7 +21,7 @@
 	</head>
 	<body>
 		<header>
-			<h1>Status</h1>
+			<h1>{title}</h1>
 			<p>Last Updated: <time datetime="{nowtime}">{now}</time></p>
 		</header>
 		<main>

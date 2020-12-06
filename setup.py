@@ -40,7 +40,7 @@ setup(
     license='MIT',
     author='Lily Foster',
     author_email='lily@lily.flowers',
-    install_requires=['httpx', 'python-dateutil', 'markdown'],
+    install_requires=['httpx', 'python-dateutil', 'markdown', 'feedgen'],
     packages=find_packages(),
     package_data={'': ['html/*.*']},
     entry_points={'console_scripts': ['status = status.__main__:main']},

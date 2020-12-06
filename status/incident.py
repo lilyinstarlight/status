@@ -33,7 +33,7 @@ def extract_title(incident_file):
     return title
 
 
-def extract_date(incident_file, timezone=None):
+def extract_date(incident_file, prefix, timezone=None):
     pos = incident_file.tell()
 
     line = incident_file.readline()
@@ -42,9 +42,9 @@ def extract_date(incident_file, timezone=None):
 
     date = None
 
-    if not date and line.startswith('Date:'):
+    if not date and line.startswith(prefix + ':'):
         try:
-            date = dateutil.parser.isoparse(line[5:].strip()).astimezone(dateutil.tz.gettz(timezone))
+            date = dateutil.parser.isoparse(line[len(prefix + ':'):].strip()).astimezone(dateutil.tz.gettz(timezone))
         except ValueError:
             pass
 
@@ -116,7 +116,7 @@ def extract_affected(incident_file):
 
 
 def extract_content(incident_file):
-    return incident_file.read()
+    return incident_file.read().strip()
 
 
 def make_name(directory, date, title):
@@ -141,7 +141,8 @@ def get_all(directory, timezone=None):
 def get(directory, name, timezone=None):
     with open(os.path.join(directory, name + '.md'), 'r') as incident_file:
         title = extract_title(incident_file)
-        date = extract_date(incident_file, timezone)
+        date = extract_date(incident_file, 'Date', timezone)
+        updated = extract_date(incident_file, 'Updated', timezone)
         status = extract_status(incident_file)
         affected = extract_affected(incident_file)
         content = extract_content(incident_file)
@@ -150,6 +151,7 @@ def get(directory, name, timezone=None):
         'name': name,
         'title': title,
         'date': date,
+        'updated': updated,
         'status': status,
         'affected': affected,
         'content': content,
@@ -166,39 +168,38 @@ def rename(directory, name):
     return new_name
 
 
-def create(directory, *, name=None, date=None, title='', status='up', affected=None, content='', timezone=None):
+def create(directory, *, name=None, date=None, title='', updated=None, status='up', affected=None, content='', timezone=None):
     if not date:
         date = datetime.datetime.now().astimezone(dateutil.tz.gettz(timezone))
+    if not updated:
+        updated = date
 
     if not name:
-        name = date.strftime('%Y-%m-%d') + '-' + slugify(title)
-
-        num = 0
-        while os.path.exists(os.path.join(directory, name + '.md')):
-            num += 1
-            name = date.strftime('%Y-%m-%d') + '-' + slugify(title) + '-' + str(num)
+        name = make_name(directory, date, title)
 
     date_formatted = date.isoformat(timespec='minutes')
-    affected_formatted = '\nAffected:\n' + ''.join(f'* {service}\n' for service in affected) + '\n' if affected else ''
+    updated_formatted = updated.isoformat(timespec='minutes')
+    affected_formatted = '\nAffected:\n' + ''.join(f'* {service}\n' for service in affected) if affected else ''
 
     with open(os.path.join(directory, name + '.md'), 'w') as incident_file:
         incident_file.write(textwrap.dedent(f'''
         # {title}
 
         Date: {date_formatted}
+        Updated: {updated_formatted}
         Status: {status}
-        {affected_formatted}
-        {content}
-        ''').lstrip())
+        ''').lstrip() + affected_formatted + '\n' + content + '\n')
 
     return name
 
 
-def modify(directory, name, *, date=None, title=None, status=None, affected=None, content='', timezone=None):
+def modify(directory, name, *, date=None, title=None, updated=None, status=None, affected=None, content='', timezone=None):
     incident = get(directory, name)
 
     if not date:
         date = incident['date']
+    if not updated:
+        updated = datetime.datetime.now().astimezone(dateutil.tz.gettz(timezone))
     if not title:
         title = incident['title']
     if not status:
@@ -206,4 +207,4 @@ def modify(directory, name, *, date=None, title=None, status=None, affected=None
     if not affected:
         affected = incident['affected']
 
-    return create(directory, name=incident['name'], date=date, title=title, status=status, affected=affected, content=(incident['content'] + '\n' + content if content else ''), timezone=None)
+    return create(directory, name=incident['name'], date=date, title=title, updated=updated, status=status, affected=affected, content=(incident['content'] + ('\n\n' + content.strip() if content.strip() else '')), timezone=None)
