@@ -118,7 +118,7 @@ def create_feed(config, now, incidents):
         fe.title(incident['title'])
         fe.published(incident['date'])
         fe.updated(incident['updated'])
-        fe.content('Status: {status}\n{affected}\n{content}'.format(status=incident['status'], affected=('\nAffected:\n' + ''.join(f'* {service}\n' for service in incident['affected']) if incident['affected'] else ''), content=incident['content']))
+        fe.content('Status: {status}\n{affected}\n{content}'.format(status=incident['status'], affected=('\nAffected:\n' + ''.join(f'* {service}\n' for service in incident['affected']) if incident['affected'] else ''), content=incident['content']), type='text')
 
         fe.id(incident['name'])
 
