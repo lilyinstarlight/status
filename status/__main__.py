@@ -28,7 +28,7 @@ def main():
 
     command_run = commands.add_parser('run', help='generate status page')
     command_run.add_argument('-c', '--config', dest='config', required=True, metavar='CONFIG.cfg', help='generation configuration file describing metadata, grafana connection, services')
-    command_run.add_argument('-o', '--output', dest='output', default='.', help='output directory (generates index.html, status.json, and feed.xml)')
+    command_run.add_argument('-o', '--output', dest='output', default='.', help='output directory (generates index.html, status.json, feed.atom, and feed.rss)')
     command_run.add_argument('-t', '--template', dest='template', help='input template directory')
     command_run.add_argument('-i', '--incident-days', dest='days', type=int, default=7, help='number of days of resolved incidents to show')
 
@@ -83,10 +83,10 @@ def main():
         with open(os.path.join(args.output, 'status.json'), 'w') as output_json:
             output_json.write(status.generate.generate_json(gconfig, now, services, statuses, incidents))
 
-        with open(os.path.join(args.output, 'atom.xml'), 'wb') as output_atom:
+        with open(os.path.join(args.output, 'feed.atom'), 'wb') as output_atom:
             output_atom.write(status.generate.generate_atom(gconfig, now, incidents))
 
-        with open(os.path.join(args.output, 'rss.xml'), 'wb') as output_rss:
+        with open(os.path.join(args.output, 'feed.rss'), 'wb') as output_rss:
             output_rss.write(status.generate.generate_rss(gconfig, now, incidents))
     elif args.command == 'new-incident':
         info = {}

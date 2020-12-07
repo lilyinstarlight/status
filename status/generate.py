@@ -51,13 +51,16 @@ def generate_html(config, now, services, statuses, incidents, *, template_direct
     with open(os.path.join(template_directory, 'affected_service.html'), 'r') as template_file:
         affected_service_template = template_file.read().rstrip('\r\n')
 
+    with open(os.path.join(template_directory, 'none.html'), 'r') as template_file:
+        none_template = template_file.read().rstrip('\r\n')
+
     services_html = []
 
     for service, status in statuses.items():
         services_html.append(service_template.format(name=html.escape(service), title=html.escape(services[service]['title']), link=html.escape(services[service]['link']), description=html.escape(services[service]['description']), status=html.escape(status), pretty=html.escape(pretty_statuses[status]), affected=('affected' if any(service in incident['affected'] for incident in incidents if incident['status'] != 'up') else '')))
 
     if not services_html:
-        services_html.append('<p>None</p>')
+        services_html.append(none_template)
 
     incidents_html = []
 
@@ -77,7 +80,7 @@ def generate_html(config, now, services, statuses, incidents, *, template_direct
         incidents_html.append(incident_template.format(name=html.escape(incident['name']), title=render_title(incident['title']), datetime=incident['date'].isoformat(timespec='milliseconds'), date=html.escape(incident['date'].strftime('%Y-%m-%d %H:%M %Z')), updatedtime=incident['updated'].isoformat(timespec='milliseconds'), updated=html.escape(incident['updated'].strftime('%Y-%m-%d %H:%M %Z')), status=html.escape(incident['status'] if incident['status'] in pretty_statuses else ''), pretty=html.escape(pretty_statuses.get(incident['status'], incident['status'])), content=render(incident['content']), affected=affected_html))
 
     if not incidents_html:
-        incidents_html.append('<p>None</p>')
+        incidents_html.append(none_template)
 
     return status_template.format(title=config['title'], nowtime=now.isoformat(timespec='milliseconds'), now=html.escape(now.strftime('%Y-%m-%d %H:%M %Z')), services='\n'.join(services_html), incidents='\n'.join(incidents_html))
 
