@@ -1,4 +1,3 @@
-import datetime
 import html
 import json
 import os.path
@@ -11,9 +10,18 @@ import feedgen.feed
 __all__ = ['generate_html', 'generate_json', 'generate_atom', 'generate_rss']
 
 
-pretty_statuses = {
+pretty_service_statuses = {
     'up': 'Operational',
     'down': 'Unavailable',
+    'maintenance': 'Maintenance',
+    'unknown': 'Unknown',
+}
+
+pretty_incident_statuses = {
+    'notice': 'Notice',
+    'resolved': 'Resolved',
+    'outage': 'Outage',
+    'monitoring': 'Monitoring',
     'maintenance': 'Maintenance',
     'unknown': 'Unknown',
 }
@@ -57,7 +65,7 @@ def generate_html(config, now, services, statuses, incidents, *, template_direct
     services_html = []
 
     for service, status in statuses.items():
-        services_html.append(service_template.format(name=html.escape(service), title=html.escape(services[service]['title']), link=html.escape(services[service]['link']), description=html.escape(services[service]['description']), status=html.escape(status), pretty=html.escape(pretty_statuses[status]), affected=('affected' if any(service in incident['affected'] for incident in incidents if incident['status'] != 'up') else '')))
+        services_html.append(service_template.format(name=html.escape(service), title=html.escape(services[service]['title']), link=html.escape(services[service]['link']), description=html.escape(services[service]['description']), status=html.escape(status), pretty=html.escape(pretty_service_statuses[status]), affected=('affected' if any(service in incident['affected'] for incident in incidents if incident['status'] != 'up') else '')))
 
     if not services_html:
         services_html.append(none_template)
@@ -77,7 +85,7 @@ def generate_html(config, now, services, statuses, incidents, *, template_direct
         else:
             affected_html = ''
 
-        incidents_html.append(incident_template.format(name=html.escape(incident['name']), title=render_title(incident['title']), datetime=incident['date'].isoformat(timespec='milliseconds'), date=html.escape(incident['date'].strftime('%Y-%m-%d %H:%M %Z')), updatedtime=incident['updated'].isoformat(timespec='milliseconds'), updated=html.escape(incident['updated'].strftime('%Y-%m-%d %H:%M %Z')), status=html.escape(incident['status'] if incident['status'] in pretty_statuses else ''), pretty=html.escape(pretty_statuses.get(incident['status'], incident['status'])), content=render(incident['content']), affected=affected_html))
+        incidents_html.append(incident_template.format(name=html.escape(incident['name']), title=render_title(incident['title']), datetime=incident['date'].isoformat(timespec='milliseconds'), date=html.escape(incident['date'].strftime('%Y-%m-%d %H:%M %Z')), updatedtime=incident['updated'].isoformat(timespec='milliseconds'), updated=html.escape(incident['updated'].strftime('%Y-%m-%d %H:%M %Z')), status=html.escape(incident['status'] if incident['status'] in pretty_incident_statuses else ''), pretty=html.escape(pretty_incident_statuses.get(incident['status'], incident['status'])), content=render(incident['content']), affected=affected_html))
 
     if not incidents_html:
         incidents_html.append(none_template)

@@ -5,7 +5,6 @@ import os
 import os.path
 import subprocess
 import sys
-import tempfile
 
 import dateutil.parser
 import dateutil.tz
@@ -69,8 +68,8 @@ def main():
         now = datetime.datetime.now().astimezone(dateutil.tz.gettz(args.timezone))
 
         for incident in incidents[:]:
-            if args.days and incident['date'] >= (now - datetime.timedelta(days=args.days)):
-                    continue
+            if args.days and incident['updated'] >= (now - datetime.timedelta(days=args.days)):
+                continue
 
             if incident['status'] == 'up':
                 incidents.remove(incident)

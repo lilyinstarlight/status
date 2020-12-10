@@ -2,7 +2,6 @@ import datetime
 import os
 import os.path
 import re
-import subprocess
 import textwrap
 
 import dateutil.parser
@@ -69,7 +68,7 @@ def extract_status(incident_file):
         status = line[7:].strip()
 
     if not status:
-        status = 'up'
+        status = 'notice'
 
         incident_file.seek(pos)
 
@@ -168,7 +167,7 @@ def rename(directory, name):
     return new_name
 
 
-def create(directory, *, name=None, date=None, title='', updated=None, status='up', affected=None, content='', timezone=None):
+def create(directory, *, name=None, date=None, title='', updated=None, status='notice', affected=None, content='', timezone=None):
     if not date:
         date = datetime.datetime.now().astimezone(dateutil.tz.gettz(timezone))
     if not updated:
