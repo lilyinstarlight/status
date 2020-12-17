@@ -65,7 +65,7 @@ def generate_html(config, now, services, statuses, incidents, *, template_direct
     services_html = []
 
     for service, status in statuses.items():
-        services_html.append(service_template.format(name=html.escape(service), title=html.escape(services[service]['title']), link=html.escape(services[service]['link']), description=html.escape(services[service]['description']), status=html.escape(status), pretty=html.escape(pretty_service_statuses[status]), affected=('affected' if any(service in incident['affected'] for incident in incidents if incident['status'] != 'up') else '')))
+        services_html.append(service_template.format(name=html.escape(service), title=html.escape(services[service]['title']), link=html.escape(services[service]['link']), description=html.escape(services[service]['description']), status=html.escape(status), pretty=html.escape(pretty_service_statuses[status]), affected=('affected' if any(service in incident['affected'] for incident in incidents if incident['status'] != 'resolved') else '')))
 
     if not services_html:
         services_html.append(none_template)
