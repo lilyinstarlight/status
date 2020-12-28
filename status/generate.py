@@ -28,7 +28,7 @@ pretty_incident_statuses = {
 
 
 def render(content):
-    return markdown.markdown(content, extensions=['extra', 'codehilite', 'sane_lists', 'smarty'], output_format='xhtml')
+    return markdown.markdown(content, extensions=['sane_lists', 'smarty', 'pymdownx.extra', 'pymdownx.caret', 'pymdownx.magiclink', 'pymdownx.saneheaders', 'pymdownx.tasklist', 'pymdownx.tilde'], output_format='xhtml')
 
 
 def render_title(title):
