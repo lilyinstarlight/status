@@ -24,6 +24,7 @@ pretty_incident_statuses = {
     'outage': 'Outage',
     'partial': 'Partial Outage',
     'monitoring': 'Monitoring',
+    'planned': 'Planned',
     'maintenance': 'Maintenance',
     'unknown': 'Unknown',
 }
