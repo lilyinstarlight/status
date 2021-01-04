@@ -13,6 +13,7 @@ __all__ = ['generate_html', 'generate_json', 'generate_atom', 'generate_rss']
 pretty_service_statuses = {
     'up': 'Operational',
     'down': 'Unavailable',
+    'degraded': 'Degraded',
     'maintenance': 'Maintenance',
     'unknown': 'Unknown',
 }
@@ -21,6 +22,7 @@ pretty_incident_statuses = {
     'notice': 'Notice',
     'resolved': 'Resolved',
     'outage': 'Outage',
+    'partial': 'Partial Outage',
     'monitoring': 'Monitoring',
     'maintenance': 'Maintenance',
     'unknown': 'Unknown',

@@ -35,7 +35,7 @@ def main():
     command_new_incident.add_argument('--date', dest='date', help='date of incident')
     command_new_incident.add_argument('--updated', dest='updated', help='last updated date of incident')
     command_new_incident.add_argument('--title', dest='title', help='title of incident')
-    command_new_incident.add_argument('--status', dest='status', choices=['notice', 'resolved', 'outage', 'monitoring', 'maintenance', 'unknown'], help='incident status')
+    command_new_incident.add_argument('--status', dest='status', choices=['notice', 'resolved', 'outage', 'partial', 'monitoring', 'maintenance', 'unknown'], help='incident status')
     command_new_incident.add_argument('--affected', dest='affected', nargs='*', help='services affected (specify multiple times per service)')
     command_new_incident.add_argument('name', nargs='?', help='slug name for incident')
 
@@ -43,7 +43,7 @@ def main():
     command_edit_incident.add_argument('--date', dest='date', help='date of incident')
     command_edit_incident.add_argument('--updated', dest='updated', help='last updated date of incident')
     command_edit_incident.add_argument('--title', dest='title', help='title of incident')
-    command_edit_incident.add_argument('--status', dest='status', choices=['notice', 'resolved', 'outage', 'monitoring', 'maintenance', 'unknown'], help='incident status')
+    command_edit_incident.add_argument('--status', dest='status', choices=['notice', 'resolved', 'outage', 'partial', 'monitoring', 'maintenance', 'unknown'], help='incident status')
     command_edit_incident.add_argument('--affected', dest='affected', nargs='*', help='services affected (specify multiple times per service)')
     command_edit_incident.add_argument('name', help='slug name for incident')
 
