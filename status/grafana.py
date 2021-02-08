@@ -1,3 +1,5 @@
+import json
+
 import httpx
 
 
@@ -28,7 +30,7 @@ def check(api_base, api_key, services):
     for service, info in services.items():
         try:
             statuses[service] = status_map[httpx.get(f'{api_base}/alerts/{info["id"]}', auth=BearerAuth(api_key)).json()['State']]
-        except (httpx.HTTPError, KeyError):
+        except (httpx.HTTPError, json.JSONDecodeError, KeyError):
             statuses[service] = 'unknown'
 
     return statuses
