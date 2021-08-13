@@ -171,7 +171,7 @@ def create(directory, *, name=None, date=None, title='', updated=None, status='n
     if not date:
         date = datetime.datetime.now().astimezone(dateutil.tz.gettz(timezone))
     if not updated:
-        updated = date
+        updated = datetime.datetime.now().astimezone(dateutil.tz.gettz(timezone))
 
     if not name:
         name = make_name(directory, date, title)
