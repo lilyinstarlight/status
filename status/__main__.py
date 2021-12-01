@@ -62,7 +62,7 @@ def main():
 
         gconfig = config['GLOBAL']
 
-        statuses = status.grafana.check(gconfig['api_base'], os.environ.get('GRAFANA_API_KEY', gconfig['api_key']), services)
+        statuses = status.grafana.check(os.environ.get('GRAFANA_API_BASE') or gconfig['api_base'], os.environ.get('GRAFANA_API_KEY') or gconfig['api_key'], services)
         incidents = status.incident.get_all(args.directory, args.timezone)
 
         now = datetime.datetime.now().astimezone(dateutil.tz.gettz(args.timezone))
